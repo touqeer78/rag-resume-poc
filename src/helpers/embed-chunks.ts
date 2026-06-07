@@ -29,7 +29,12 @@ async function main() {
   );
 
   console.log("Vectors created:", vectors.length);
-  console.log("Each vector size:", vectors[0].length);
+  const firstVector = vectors[0];
+  if (!firstVector) {
+    console.log("No embeddings were created.");
+  } else {
+    console.log("Each vector size:", firstVector.length);
+  }
 }
 
 main().catch(console.error);

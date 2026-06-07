@@ -36,21 +36,35 @@ async function main() {
     let dot = 0,
       na = 0,
       nb = 0;
+    const len = Math.min(a.length, b.length);
 
-    for (let i = 0; i < a.length; i++) {
-      dot += a[i] * b[i];
-      na += a[i] * a[i];
-      nb += b[i] * b[i];
+    for (let i = 0; i < len; i++) {
+      const ai = a[i];
+      const bi = b[i];
+      if (ai === undefined || bi === undefined) {
+        continue;
+      }
+
+      dot += ai * bi;
+      na += ai * ai;
+      nb += bi * bi;
     }
 
     return dot / (Math.sqrt(na) * Math.sqrt(nb));
   }
 
   const scored = chunkVectors
-    .map((vec, i) => ({
-      text: chunks[i].pageContent,
-      score: cosine(queryVector, vec),
-    }))
+    .map((vec, i) => {
+      const chunk = chunks[i];
+      if (!chunk) {
+        throw new Error(`Missing chunk for vector index ${i}`);
+      }
+
+      return {
+        text: chunk.pageContent,
+        score: cosine(queryVector, vec),
+      };
+    })
     .sort((a, b) => b.score - a.score);
 
   // 5. Take top 3 chunks

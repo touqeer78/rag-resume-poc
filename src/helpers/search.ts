@@ -34,22 +34,36 @@ async function main() {
     let dot = 0,
       normA = 0,
       normB = 0;
+    const len = Math.min(a.length, b.length);
 
-    for (let i = 0; i < a.length; i++) {
-      dot += a[i] * b[i];
-      normA += a[i] * a[i];
-      normB += b[i] * b[i];
+    for (let i = 0; i < len; i++) {
+      const ai = a[i];
+      const bi = b[i];
+      if (ai === undefined || bi === undefined) {
+        continue;
+      }
+
+      dot += ai * bi;
+      normA += ai * ai;
+      normB += bi * bi;
     }
 
     return dot / (Math.sqrt(normA) * Math.sqrt(normB));
   }
 
   // 6. Rank chunks
-  const scored = chunkVectors.map((vec, i) => ({
-    index: i,
-    score: cosineSimilarity(queryVector, vec),
-    text: chunks[i].pageContent,
-  }));
+  const scored = chunkVectors.map((vec, i) => {
+    const chunk = chunks[i];
+    if (!chunk) {
+      throw new Error(`Missing chunk for vector index ${i}`);
+    }
+
+    return {
+      index: i,
+      score: cosineSimilarity(queryVector, vec),
+      text: chunk.pageContent,
+    };
+  });
 
   scored.sort((a, b) => b.score - a.score);
 

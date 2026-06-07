@@ -24,15 +24,15 @@
     "typescript": "^6.0.3"
   },
   "scripts": {
-    "dev": "ts-node src/index.ts",
-    "embedding": "ts-node src/embedding-test.ts",
-    "list-models": "ts-node src/list-models.ts",
-    "gemini-test": "ts-node src/gemini-test.ts",
-    "embed-chunks": "ts-node src/embed-chunks.ts",
-    "search": "ts-node src/search.ts",
-    "rag-localdb": "ts-node src/rag-localdb.ts",
-    "rag-answer": "ts-node src/rag-answer.ts",
+    "dev": "ts-node src/app/index.ts",
+    "embedding": "ts-node src/helpers/embedding-test.ts",
+    "list-models": "ts-node src/helpers/list-models.ts",
+    "gemini-test": "ts-node src/helpers/gemini-test.ts",
+    "embed-chunks": "ts-node src/helpers/embed-chunks.ts",
+    "search": "ts-node src/helpers/search.ts",
+    "rag-localdb": "ts-node src/app/rag-localdb.ts",
+    "rag-answer": "ts-node src/app/rag-answer.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/app/index.js"
   }
 }
