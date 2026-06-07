@@ -1,11 +1,13 @@
 {
   "name": "rag-resume-poc",
   "version": "1.0.0",
+  "type": "module",
   "main": "index.js",
   "repository": "https://github.com/touqeer78/rag-resume-poc.git",
   "author": "toqi",
   "license": "MIT",
   "dependencies": {
+    "@langchain/community": "^1.1.29",
     "@langchain/core": "^1.1.48",
     "@langchain/google-genai": "^2.1.31",
     "dotenv": "^17.4.2",
