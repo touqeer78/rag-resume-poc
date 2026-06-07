@@ -7,6 +7,7 @@
   "author": "toqi",
   "license": "MIT",
   "dependencies": {
+    "@google/genai": "^2.8.0",
     "@langchain/community": "^1.1.29",
     "@langchain/core": "^1.1.48",
     "@langchain/google-genai": "^2.1.31",
@@ -22,6 +23,9 @@
   },
   "scripts": {
     "dev": "ts-node src/index.ts",
+    "embedding": "ts-node src/embedding-test.ts",
+    "list-models": "ts-node src/list-models.ts",
+    "gemini-test": "ts-node src/gemini-test.ts",
     "build": "tsc",
     "start": "node dist/index.js"
   }
