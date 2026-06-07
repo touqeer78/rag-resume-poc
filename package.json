@@ -8,10 +8,12 @@
   "license": "MIT",
   "dependencies": {
     "@google/genai": "^2.8.0",
+    "@lancedb/lancedb": "^0.30.0",
     "@langchain/community": "^1.1.29",
     "@langchain/core": "^1.1.48",
     "@langchain/google-genai": "^2.1.31",
     "@langchain/textsplitters": "^1.0.1",
+    "apache-arrow": "^21.1.0",
     "dotenv": "^17.4.2",
     "langchain": "^1.4.4",
     "pdf-parse": "^2.4.5"
@@ -28,6 +30,7 @@
     "gemini-test": "ts-node src/gemini-test.ts",
     "embed-chunks": "ts-node src/embed-chunks.ts",
     "search": "ts-node src/search.ts",
+    "rag-localdb": "ts-node src/rag-localdb.ts",
     "rag-answer": "ts-node src/rag-answer.ts",
     "build": "tsc",
     "start": "node dist/index.js"
