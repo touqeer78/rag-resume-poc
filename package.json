@@ -25,13 +25,7 @@
   },
   "scripts": {
     "dev": "ts-node src/app/index.ts",
-    "embedding": "ts-node src/helpers/embedding-test.ts",
-    "list-models": "ts-node src/helpers/list-models.ts",
-    "gemini-test": "ts-node src/helpers/gemini-test.ts",
-    "embed-chunks": "ts-node src/helpers/embed-chunks.ts",
-    "search": "ts-node src/helpers/search.ts",
     "rag-localdb": "ts-node src/app/rag-localdb.ts",
-    "rag-answer": "ts-node src/app/rag-answer.ts",
     "build": "tsc",
     "start": "node dist/app/index.js"
   }
