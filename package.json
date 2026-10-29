@@ -24,9 +24,11 @@
     "typescript": "^6.0.3"
   },
   "scripts": {
-    "dev": "ts-node src/app/index.ts",
-    "rag-localdb": "ts-node src/app/rag-localdb.ts",
+    "dev": "yarn build && node dist/app/index.js",
+    "rag-localdb": "yarn build && node dist/app/index.js",
+    "rag-reindex": "yarn build && node dist/app/index.js --reindex",
+    "inspect-chunks": "yarn build && node dist/app/index.js --inspect-chunks",
     "build": "tsc",
-    "start": "node dist/app/index.js"
+    "start": "yarn build && node dist/app/index.js"
   }
 }

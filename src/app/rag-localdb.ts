@@ -1,62 +1,33 @@
 import "dotenv/config";
-import * as lancedb from "@lancedb/lancedb";
-import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
-import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { LanceDB } from "@langchain/community/vectorstores/lancedb";
 import {
   GoogleGenerativeAIEmbeddings,
   ChatGoogleGenerativeAI,
 } from "@langchain/google-genai";
+import {
+  connectToResumeDatabase,
+  ensureResumeIndexed,
+} from "./resume-index.js";
 
-async function main() {
-  // 1. Load PDF
-  //const loader = new PDFLoader("documents/resume.pdf");
-  //const docs = await loader.load();
-
-  // 2. Chunk
-  //const splitter = new RecursiveCharacterTextSplitter({
-  //chunkSize: 500,
-  //chunkOverlap: 100,
-  //});
-  //const chunks = await splitter.splitDocuments(docs);
-
-  // 3. Setup Embeddings
+export async function runRag(
+  query: string,
+  forceReindex: boolean,
+): Promise<void> {
   const embeddings = new GoogleGenerativeAIEmbeddings({
     model: "models/gemini-embedding-001",
   });
 
-  // 4. Initialize LanceDB
-  const db = await lancedb.connect(".lancedb");
-
-  //const initialVectors = await embeddings.embedDocuments(
-  //chunks.map((c) => c.pageContent),
-  //);
-
-  // CLEAN THE DATA HERE
-  // const data = chunks.map((chunk, i) => ({
-  //   vector: initialVectors[i],
-  //   text: chunk.pageContent,
-  //   // We only keep simple metadata. This avoids the Arrow type error.
-  //   metadata: {
-  //     source: "resume.pdf",
-  //     pageNumber: chunk.metadata.loc?.pageNumber || 1,
-  //   },
-  // }));
-  // Create the table with the actual data
-  //const table = await db.createTable("vectors", data, { overwrite: true });
-
+  const db = await connectToResumeDatabase();
+  await ensureResumeIndexed(db, embeddings, forceReindex);
   const table = await db.openTable("vectors");
-
-  // Now wrap it in the LangChain VectorStore object
   const vectorStore = new LanceDB(embeddings, { table });
 
-  // 5. Search the Database
-  const query = "Did Touqeer worked in AWS when he was with Tennis Australia?";
-  const searchResults = await vectorStore.similaritySearch(query, 3);
+  const searchResults = await vectorStore.similaritySearchWithScore(query, 3);
+  logRetrievedChunks(searchResults);
+  const topChunks = searchResults
+    .map(([document]) => document.pageContent)
+    .join("\n\n");
 
-  const topChunks = searchResults.map((doc) => doc.pageContent).join("\n\n");
-
-  // 6. Ask Gemini
   const llm = new ChatGoogleGenerativeAI({
     model: "gemini-2.5-flash",
   });
@@ -77,4 +48,29 @@ async function main() {
   console.log(result.content);
 }
 
-main().catch(console.error);
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function logRetrievedChunks(
+  results: Awaited<ReturnType<LanceDB["similaritySearchWithScore"]>>,
+): void {
+  console.log(`\nRetrieved ${results.length} chunks:\n`);
+
+  results.forEach(([document, distance], index) => {
+    const nestedMetadata = document.metadata["metadata"];
+    const metadata = isRecord(nestedMetadata)
+      ? nestedMetadata
+      : document.metadata;
+    const source =
+      typeof metadata["source"] === "string" ? metadata["source"] : "unknown";
+    const pageNumber = metadata["pageNumber"];
+    const page =
+      typeof pageNumber === "number" ? ` | Page: ${pageNumber}` : "";
+
+    console.log(`--- Rank ${index + 1} | Distance: ${distance}${page} ---`);
+    console.log(`Source: ${source}`);
+    console.log(document.pageContent);
+    console.log();
+  });
+}

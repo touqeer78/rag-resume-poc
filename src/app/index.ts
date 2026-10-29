@@ -1,21 +1,13 @@
 import "dotenv/config";
-import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
-import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { createInterface } from "node:readline/promises";
+import { stdin, stdout } from "node:process";
+import { loadResumeChunks } from "./resume-index.js";
+import { runRag } from "./rag-localdb.js";
 
-async function main() {
-  const loader = new PDFLoader("documents/resume.pdf");
+async function inspectResumeChunks(): Promise<void> {
+  const { documents, chunks } = await loadResumeChunks();
 
-  const docs = await loader.load();
-
-  console.log(`Pages loaded: ${docs.length}`);
-
-  const splitter = new RecursiveCharacterTextSplitter({
-    chunkSize: 500,
-    chunkOverlap: 100,
-  });
-
-  const chunks = await splitter.splitDocuments(docs);
-
+  console.log(`Pages loaded: ${documents.length}`);
   console.log(`Chunks created: ${chunks.length}`);
 
   chunks.slice(0, 5).forEach((chunk, index) => {
@@ -26,4 +18,61 @@ async function main() {
   });
 }
 
-main().catch(console.error);
+async function main(): Promise<void> {
+  const args = process.argv.slice(2);
+  let forceReindex = false;
+  let inspectChunks = false;
+  let question: string | undefined;
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+
+    if (arg === "--reindex") {
+      forceReindex = true;
+    } else if (arg === "--inspect-chunks") {
+      inspectChunks = true;
+    } else if (arg === "--question" || arg === "-q") {
+      const value = args[index + 1];
+      if (!value || value.startsWith("-")) {
+        throw new Error(`${arg} requires a question value`);
+      }
+      question = value;
+      index += 1;
+    } else {
+      throw new Error(`Unsupported argument: ${arg}`);
+    }
+  }
+
+  if (forceReindex && inspectChunks) {
+    throw new Error("--reindex and --inspect-chunks cannot be used together");
+  }
+
+  if (inspectChunks && question) {
+    throw new Error("--question cannot be used with --inspect-chunks");
+  }
+
+  if (inspectChunks) {
+    await inspectResumeChunks();
+    return;
+  }
+
+  if (!question) {
+    const readline = createInterface({ input: stdin, output: stdout });
+    try {
+      question = (await readline.question("Ask a question about the resume: ")).trim();
+    } finally {
+      readline.close();
+    }
+  }
+
+  if (!question) {
+    throw new Error("Question cannot be empty");
+  }
+
+  await runRag(question, forceReindex);
+}
+
+main().catch((error: unknown) => {
+  console.error("RAG run failed:", error);
+  process.exitCode = 1;
+});
